@@ -1,1 +1,2 @@
-#
+simpleaudio==1.0.4
+pathlib==1.0.1
