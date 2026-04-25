@@ -4,7 +4,13 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from audio_tools import AudioLoader, AudioProcessor, SimpleSequencer, AudioEngine
+from audio_tools import (
+    AudioLoader, 
+    AudioProcessor, 
+    SimpleSequencer, 
+    AudioEngine, 
+    PatternRandomizer
+)
 
 def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12,45 +18,38 @@ def main():
 
     loader = AudioLoader(audio_folder)
     processor = AudioProcessor()
-    sequencer = SimpleSequencer(bpm=120, steps=8)
+    sequencer = SimpleSequencer(bpm=125, steps=16)
     engine = AudioEngine()
+    randomizer = PatternRandomizer()
 
-    print("=== DrumLogs System Test ===")
+    print("=== DrumLogs Algorithmic Test ===")
 
     categories = loader.list_categories()
     if not categories:
-        print("No audio categories found.")
         return
 
-    kick_pattern = [1, 0, 1, 0, 1, 0, 1, 0]
-    snare_pattern = [0, 0, 1, 0, 0, 0, 1, 0]
-
     if "kick" in categories:
-        sequencer.add_track("kick", kick_pattern)
+        sequencer.add_track("kick", randomizer.generate_kick_pattern())
     if "snare" in categories:
-        sequencer.add_track("snare", snare_pattern)
+        sequencer.add_track("snare", randomizer.generate_snare_pattern())
+    if "hihat" in categories:
+        sequencer.add_track("hihat", randomizer.generate_hihat_pattern(density=0.7))
 
     step_duration = sequencer.get_step_duration()
 
-    print(f"Playing Sequence at {sequencer.bpm} BPM...")
-    
     try:
-        for loop in range(2):
+        for loop in range(4):
+            print(f"\nLoop {loop + 1}")
             for step in range(sequencer.steps):
                 active_tracks = sequencer.get_active_steps(step)
-                
                 for track in active_tracks:
                     samples = loader.get_sample(track)
                     if samples:
                         sample_path = list(samples.values())[0]
                         engine.play_wav(sample_path)
-                        
-                        info = processor.get_info(sample_path)
-                        print(f"Step {step} | {track} | {info.get('frame_rate')}Hz")
-                
                 time.sleep(step_duration)
     except KeyboardInterrupt:
-        print("\nPlayback stopped.")
+        print("\nExit.")
 
 if __name__ == "__main__":
     main()
