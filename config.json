@@ -1,5 +1,6 @@
 {
     "bpm": 100,
     "steps": 16,
-    "audio_dir": ""
+    "audio_dir": "audio_data",
+    "log_file": "drumlogs.log"
 }
