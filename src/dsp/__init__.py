@@ -1,0 +1,1 @@
+from .synths import DrumSynth
