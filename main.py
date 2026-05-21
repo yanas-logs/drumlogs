@@ -1,55 +1,66 @@
 import os
 import sys
 import time
+import numpy as np
+import simpleaudio as sa
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from audio_tools import (
-    AudioLoader, 
-    AudioProcessor, 
-    SimpleSequencer, 
-    AudioEngine, 
-    PatternRandomizer,
-    AudioLogger
-)
+from audio_tools import SimpleSequencer, ConfigManager
+from dsp import DrumSynth, AudioEffects, ScaleMapper, AudioMixer
 
 def main():
-    log = AudioLogger()
-    log.info("Starting DrumLogs System")
-
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    audio_folder = os.path.join(base_dir, "audio_data")
-
-    loader = AudioLoader(audio_folder)
-    sequencer = SimpleSequencer(bpm=120, steps=16)
-    engine = AudioEngine()
-    randomizer = PatternRandomizer()
-
-    categories = loader.list_categories()
-    if not categories:
-        log.error("No audio categories found in audio_data/")
-        return
-
-    log.info(f"Categories loaded: {categories}")
-
-    if "kick" in categories:
-        sequencer.add_track("kick", randomizer.generate_kick_pattern())
+    config = ConfigManager()
+    synth = DrumSynth()
+    fx = AudioEffects()
+    mapper = ScaleMapper()
+    mixer = AudioMixer()
     
+    steps = config.get("steps")
+    bpm = config.get("bpm")
+    sequencer = SimpleSequencer(bpm=bpm, steps=steps)
+
+    sequencer.add_track("kendang_tak",  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0])
+    sequencer.add_track("kendang_dung", [0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0])
+    
+    saron_pattern = [0, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 3, 2, 1]
+    sequencer.add_track("saron", [1 if x >= 0 else 0 for x in saron_pattern])
+
+    sounds = {
+        "kendang_tak": fx.apply_gain(synth.generate_kendang(tone="tak"), 0.8),
+        "kendang_dung": fx.apply_gain(synth.generate_kendang(tone="dung"), 0.9)
+    }
+
+    saron_notes = {}
+    for i in range(5):
+        freq = mapper.get_freq("slendro", i)
+        raw_saron = synth.generate_saron(freq=freq)
+        saron_fx = fx.apply_delay(raw_saron, delay_samples=6000, feedback=0.4)
+        saron_notes[i] = fx.apply_gain(saron_fx, 0.6)
+
     step_duration = sequencer.get_step_duration()
 
     try:
-        log.info("Beginning playback loop")
-        for _ in range(2):
+        print(f"DrumLogs Engine | Mixer Mode | BPM: {bpm}")
+        for loop in range(4):
             for step in range(sequencer.steps):
-                active = sequencer.get_active_steps(step)
-                for track in active:
-                    samples = loader.get_sample(track)
-                    if samples:
-                        path = list(samples.values())[0]
-                        engine.play_wav(path)
+                active_tracks = sequencer.get_active_steps(step)
+                step_signals = []
+                
+                for track in active_tracks:
+                    if track == "saron":
+                        note_idx = saron_pattern[step]
+                        step_signals.append(saron_notes[note_idx])
+                    elif track in sounds:
+                        step_signals.append(sounds[track])
+                
+                if step_signals:
+                    mixed_buffer = mixer.mix_signals(step_signals)
+                    sa.play_buffer(mixed_buffer, 1, 2, 44100)
+                    
                 time.sleep(step_duration)
     except KeyboardInterrupt:
-        log.info("System stopped by user")
+        print("\nProcess terminated.")
 
 if __name__ == "__main__":
     main()
