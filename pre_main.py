@@ -6,14 +6,16 @@ import simpleaudio as sa
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from audio_tools import SimpleSequencer, ConfigManager
-from dsp import DrumSynth, AudioEffects, ScaleMapper
+from audio_tools import SimpleSequencer, ConfigManager, TerminalVisualizer
+from dsp import DrumSynth, AudioEffects, ScaleMapper, AudioMixer
 
 def main():
     config = ConfigManager()
     synth = DrumSynth()
     fx = AudioEffects()
     mapper = ScaleMapper()
+    mixer = AudioMixer()
+    ui = TerminalVisualizer()
     
     steps = config.get("steps")
     bpm = config.get("bpm")
@@ -40,17 +42,28 @@ def main():
     step_duration = sequencer.get_step_duration()
 
     try:
-        print(f"DrumLogs Engine | Slendro Scale | BPM: {bpm}")
+        print(f"DrumLogs Engine | Live Monitor | BPM: {bpm}")
+        print("-" * 60)
         for loop in range(4):
             for step in range(sequencer.steps):
                 active_tracks = sequencer.get_active_steps(step)
+                step_signals = []
+                
                 for track in active_tracks:
                     if track == "saron":
                         note_idx = saron_pattern[step]
-                        sa.play_buffer(saron_notes[note_idx], 1, 2, 44100)
+                        step_signals.append(saron_notes[note_idx])
                     elif track in sounds:
-                        sa.play_buffer(sounds[track], 1, 2, 44100)
+                        step_signals.append(sounds[track])
+                
+                ui.render(step, sequencer.steps, active_tracks)
+
+                if step_signals:
+                    mixed_buffer = mixer.mix_signals(step_signals)
+                    sa.play_buffer(mixed_buffer, 1, 2, 44100)
+                    
                 time.sleep(step_duration)
+        print("\n" + "-" * 60 + "\nPlayback finished.")
     except KeyboardInterrupt:
         print("\nProcess terminated.")
 
