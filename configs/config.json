@@ -1,6 +1,25 @@
 {
-    "bpm": 100,
-    "steps": 16,
-    "audio_dir": "audio_data",
-    "log_file": "drumlogs.log"
+  "bpm": 80,
+  "steps": 16,
+  "instruments": {
+    "kick": {
+      "start_freq": 110.0,
+      "end_freq": 45.0,
+      "duration": 0.18,
+      "wave_type": "sine"
+    },
+    "snare": {
+      "start_freq": 240.0,
+      "end_freq": 130.0,
+      "duration": 0.16,
+      "wave_type": "triangle",
+      "noise_mix": 0.45
+    },
+    "hihat": {
+      "start_freq": 12000.0,
+      "end_freq": 9000.0,
+      "duration": 0.04,
+      "wave_type": "noise"
+    }
+  }
 }

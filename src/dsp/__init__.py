@@ -1,4 +1,4 @@
-from .synths import DrumSynth
 from .effects import AudioEffects
-from .scales import ScaleMapper
 from .mixer import AudioMixer
+from .synths import DrumSynth, ConfigurableSynth
+from .scales import ScaleMapper
