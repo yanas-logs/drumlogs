@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 import sounddevice as sd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
 
 from audio_tools import SimpleSequencer, ConfigManager, TerminalVisualizer
 from dsp import ConfigurableSynth, AudioEffects, AudioMixer
