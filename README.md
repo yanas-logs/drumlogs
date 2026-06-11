@@ -16,6 +16,7 @@ DrumLogs is a simple Python utility project for managing and playing drum audio 
 ├── src/
 │   ├── audio_tools/
 │   └── dsp/
+├── testing/
 ├── main.py
 ├── pre_main.py
 ├── requirements.txt
